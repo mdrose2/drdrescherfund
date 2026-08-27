@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Dr. Drescher's 20/20 Sprint</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #e2e4db;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            margin: 0;
+        }
+
+        #app {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 12px 40px rgba(25, 25, 26, 0.15);
+            padding: 20px 18px 28px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(139, 34, 48, 0.15);
+        }
+
+        .header {
+            background: #8b2230;
+            margin: -20px -18px 18px -18px;
+            padding: 16px 18px 12px;
+            text-align: center;
+            border-bottom: 4px solid #e0ab4c;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            font-size: clamp(1.3rem, 5vw, 1.8rem);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header h1 span {
+            color: #e0ab4c;
+        }
+
+        .header .sub {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: clamp(0.65rem, 2vw, 0.85rem);
+            font-weight: 600;
+        }
+        .header .sub .high-score {
+            background: #58001b;
+            padding: 3px 14px;
+            border-radius: 30px;
+            color: #e0ab4c;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .game-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .stat-box {
+            background: #f4f4f0;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #7C878E;
+            font-weight: 700;
+            color: #242424;
+            text-align: center;
+            flex: 1 0 auto;
+            min-width: 60px;
+        }
+        .stat-box .label {
+            font-weight: 400;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #7C878E;
+            display: block;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+        .stat-box .value {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            line-height: 1.2;
+            color: #19191a;
+        }
+        .stat-box.timer .value {
+            color: #8b2230;
+        }
+        .stat-box.score .value {
+            color: #1a7a3a;
+        }
+        .stat-box.streak .value {
+            color: #d09a36;
+        }
+
+        .pause-btn {
+            background: #242424;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+        .pause-btn:hover {
+            background: #3a3a3a;
+        }
+        .pause-btn:active {
+            transform: scale(0.92);
+        }
+
+        #promptText {
+            text-align: center;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            font-weight: 600;
+            background: #e2e4db;
+            padding: 6px 12px;
+            border-radius: 40px;
+            margin-bottom: 14px;
+            color: #242424;
+        }
+        #promptText .target-letter {
+            color: #8b2230;
+            font-size: clamp(1.8rem, 6vw, 2.6rem);
+            font-weight: 800;
+            display: inline-block;
+            min-width: 35px;
+            transition: transform 0.1s;
+        }
+        #promptText .target-letter.pulse {
+            animation: pulse 0.15s ease;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: clamp(6px, 1.8vw, 14px);
+            margin: 6px 0 10px;
+            transition: filter 0.25s ease-in-out;
+            font-size: clamp(1.8rem, 5.5vw, 3.2rem);
+        }
+
+        .tile {
+            background: #ffffff;
+            border: 2px solid #8b2230;
+            border-radius: clamp(8px, 1.5vw, 16px);
+            padding: 8px 0;
+            text-align: center;
+            font-weight: 700;
+            color: #19191a;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.08s, transform 0.08s, border-color 0.08s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            font-size: inherit;
+        }
+        .tile:hover {
+            background: #faf8f5;
+        }
+        .tile:active {
+            transform: scale(0.92);
+        }
+
+        .tile.correct-flash {
+            background: #b8e0b8 !important;
+            border-color: #1a7a3a;
+        }
+        .tile.wrong-flash {
+            background: #f7c5c5 !important;
+            border-color: #b33c3c;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(25, 25, 26, 0.8);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+        }
+        .overlay.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .card {
+            background: #ffffff;
+            max-width: 440px;
+            width: 100%;
+            padding: 28px 24px 24px;
+            border-radius: 36px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-top: 8px solid #e0ab4c;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        .card .icon {
+            font-size: 3.6rem;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        .card h2 {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            color: #8b2230;
+            margin-bottom: 2px;
+        }
+        .card .sub-text {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #242424;
+            margin-bottom: 4px;
+        }
+        .card .score-display {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #8b2230;
+            background: #f4f4f0;
+            padding: 4px 16px;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 6px auto 10px;
+        }
+        .card .high-score-end {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #58001b;
+            margin-bottom: 12px;
+        }
+        .card .high-score-end span {
+            background: #e0ab4c;
+            padding: 2px 14px;
+            border-radius: 30px;
+            color: #19191a;
+        }
+
+        .card .quote-block {
+            background: #f9f6f0;
+            border-left: 4px solid #e0ab4c;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin: 12px 0 16px;
+            font-style: italic;
+            color: #242424;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .card .quote-block .attribution {
+            font-style: normal;
+            font-weight: 700;
+            color: #8b2230;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 20px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+            touch-action: manipulation;
+            width: 100%;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-gold {
+            background: #e0ab4c;
+            color: #19191a;
+        }
+        .btn-gold:hover {
+            background: #d09a36;
+        }
+        .btn-burgundy {
+            background: #8b2230;
+            color: #ffffff;
+        }
+        .btn-burgundy:hover {
+            background: #6e1a26;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #8b2230;
+            border: 2px solid #8b2230;
+        }
+        .btn-outline:hover {
+            background: #f0e6e8;
+        }
+        .btn-dark {
+            background: #242424;
+            color: #ffffff;
+        }
+        .btn-dark:hover {
+            background: #3a3a3a;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #7C878E;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 420px) {
+            #app { padding: 14px 10px 18px; }
+            .header { margin: -14px -10px 14px -10px; padding: 12px 10px 10px; }
+            .stat-box { padding: 2px 8px; min-width: 50px; }
+            .stat-box .value { font-size: 1.2rem; }
+            .pause-btn { width: 36px; height: 36px; font-size: 1rem; }
+            .card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <h1>👁️ <span>20/20</span> Sprint for Dr. Drescher</h1>
+            <div class="sub">
+                <span class="high-score">🏅 Your Top Sprint Today: <span id="highScoreDisplay">0</span></span>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-box timer">
+                <span class="label">⏱️ Time</span>
+                <span class="value" id="timerDisplay">30</span>
+            </div>
+            <div class="stat-box score">
+                <span class="label">✅ Score</span>
+                <span class="value" id="scoreDisplay">0</span>
+            </div>
+            <div class="stat-box streak">
+                <span class="label">🔥 Streak</span>
+                <span class="value" id="streakDisplay">0</span>
+            </div>
+            <button class="pause-btn" id="pauseBtn" aria-label="Pause Game">⏸️</button>
+        </div>
+
+        <div id="promptText">
+            Click the letter: <span class="target-letter" id="targetLetter">E</span>
+        </div>
+
+        <div id="grid"></div>
+        <p class="footer-note">Wrong clicks blur the chart. Stay sharp!</p>
+    </div>
+
+    <div id="overlay" class="overlay hidden">
+        <div class="card" id="overlayCard">
+            <!-- Dynamically rendered -->
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const LETTERS = ['E', 'F', 'P', 'T', 'O', 'Z', 'D', 'C'];
+            const GRID_SIZE = 5;
+            const GAME_DURATION = 30;
+            const STORAGE_KEY = 'drescherHighScoreTimed';
+            const MAX_BLUR = 14;
+
+            const grid = document.getElementById('grid');
+            const targetEl = document.getElementById('targetLetter');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const streakDisplay = document.getElementById('streakDisplay');
+            const highScoreDisplay = document.getElementById('highScoreDisplay');
+            const overlay = document.getElementById('overlay');
+            const overlayCard = document.getElementById('overlayCard');
+            const pauseBtn = document.getElementById('pauseBtn');
+
+            let score = 0;
+            let timeLeft = GAME_DURATION;
+            let currentStreak = 0;
+            let currentBlur = 0;
+            let targetLetter = '';
+            let isPlaying = false;
+            let isPaused = false;
+            let timerInterval = null;
+            let currentHighScore = parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
+
+            highScoreDisplay.innerText = currentHighScore;
+
+            function getRandomLetter() {
+                return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+            }
+
+            function generateGrid() {
+                grid.innerHTML = '';
+                const total = GRID_SIZE * GRID_SIZE;
+                for (let i = 0; i < total; i++) {
+                    const tile = document.createElement('div');
+                    const letter = getRandomLetter();
+                    tile.className = 'tile';
+                    tile.dataset.letter = letter;
+                    tile.textContent = letter;
+                    grid.appendChild(tile);
+                }
+            }
+
+            function updateGridSize() {
+                // UPDATED: Shrink factor changed from 0.965 to 0.94 for more noticeable shrinking!
+                const base = 1.8;
+                const shrink = Math.pow(0.94, score);
+                let size = base * shrink;
+                if (size < 0.75) size = 0.75;
+                grid.style.fontSize = clampRem(size);
+            }
+
+            function clampRem(val) {
+                return Math.max(0.75, val) + 'rem';
+            }
+
+            function applyBlur() {
+                grid.style.filter = `blur(${currentBlur}px)`;
+            }
+
+            function setNewTarget() {
+                targetLetter = getRandomLetter();
+                targetEl.textContent = targetLetter;
+                targetEl.classList.remove('pulse');
+                void targetEl.offsetWidth;
+                targetEl.classList.add('pulse');
+            }
+
+            function updateUI() {
+                scoreDisplay.textContent = score;
+                timerDisplay.textContent = timeLeft;
+                streakDisplay.textContent = currentStreak;
+                updateGridSize();
+                applyBlur();
+            }
+
+            function resetGameState() {
+                score = 0;
+                timeLeft = GAME_DURATION;
+                currentStreak = 0;
+                currentBlur = 0;
+                grid.style.filter = 'blur(0px)';
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                isPlaying = false;
+                isPaused = false;
+                pauseBtn.textContent = '⏸️';
+            }
+
+            function startGame() {
+                resetGameState();
+                isPlaying = true;
+                isPaused = false;
+                pauseBtn.textContent = '⏸️';
+                overlay.classList.add('hidden');
+
+                generateGrid();
+                setNewTarget();
+                updateUI();
+
+                timerInterval = setInterval(() => {
+                    if (isPaused) return;
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            }
+
+            function endGame() {
+                isPlaying = false;
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                pauseBtn.textContent = '⏸️';
+
+                let isNewHigh = false;
+                if (score > currentHighScore) {
+                    currentHighScore = score;
+                    localStorage.setItem(STORAGE_KEY, String(currentHighScore));
+                    highScoreDisplay.innerText = currentHighScore;
+                    isNewHigh = true;
+                }
+
+                renderOverlay('end', isNewHigh);
+                overlay.classList.remove('hidden');
+            }
+
+            function togglePause() {
+                if (!isPlaying) return;
+                isPaused = !isPaused;
+                pauseBtn.textContent = isPaused ? '▶️' : '⏸️';
+                if (isPaused) {
+                    renderOverlay('pause');
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            function renderOverlay(mode, isNewHigh = false) {
+                let icon, title, subText, showScore, showHighScore, showQuote, showDonate, buttonsHTML;
+
+                if (mode === 'pause') {
+                    icon = '⏸️';
+                    title = 'Game Paused';
+                    subText = 'Take a breather, then jump back in.';
+                    showScore = false;
+                    showHighScore = false;
+                    showQuote = false;
+                    showDonate = true;
+                    buttonsHTML = `
+                        <button class="btn btn-gold" id="resumeBtn">▶️ Resume Game</button>
+                        <button class="btn btn-outline" id="restartFromPauseBtn">🔄 Restart Round</button>
+                        <a href="https://host.nxt.blackbaud.com/adaptive-donor-form/?formId=f702688e-e416-46cd-8412-7bfe4041453b&envid=p-xMOv1Trc-0WfJjEjjXYEVw&zone=usa&utm_source=qr_code" 
+                           target="_blank" rel="noopener noreferrer" 
+                           class="btn btn-burgundy">🎓 Donate Now</a>
+                    `;
+                } else if (mode === 'end') {
+                    icon = isNewHigh ? '🏆' : '⏰';
+                    title = isNewHigh ? 'New Best Sprint!' : "Time's Up!";
+                    subText = `You found ${score} correct letters in 30 seconds!`;
+                    showScore = true;
+                    showHighScore = true;
+                    showQuote = true;
+                    showDonate = true;
+                    buttonsHTML = `
+                        <a href="https://host.nxt.blackbaud.com/adaptive-donor-form/?formId=f702688e-e416-46cd-8412-7bfe4041453b&envid=p-xMOv1Trc-0WfJjEjjXYEVw&zone=usa&utm_source=qr_code" 
+                           target="_blank" rel="noopener noreferrer" 
+                           class="btn btn-burgundy">🎓 Donate to Dr. Drescher Fund</a>
+                        <button class="btn btn-gold" id="playAgainBtn">🔄 Play Again</button>
+                    `;
+                } else {
+                    icon = '👁️';
+                    title = 'Ready to Sprint?';
+                    subText = 'You have 30 seconds. Click the target letter as fast as you can.';
+                    showScore = false;
+                    showHighScore = true;
+                    showQuote = true;
+                    showDonate = false;
+                    buttonsHTML = `
+                        <button class="btn btn-gold" id="startBtn">▶️ Start 30-Second Round</button>
+                    `;
+                }
+
+                const scoreHTML = showScore ? `<div class="score-display">Score: ${score}</div>` : '';
+                const highScoreHTML = showHighScore ?
+                    `<div class="high-score-end">🏅 Your Top Sprint Today: <span>${currentHighScore}</span></div>` :
+                    '';
+                const quoteHTML = showQuote ? `
+                    <div class="quote-block">
+                        "Yes, getting a doctorate is hard, but it's <em>not that hard</em>."
+                        <span class="attribution">— Dr. Drescher</span>
+                    </div>
+                ` : '';
+
+                overlayCard.innerHTML = `
+                    <div class="icon">${icon}</div>
+                    <h2>${title}</h2>
+                    <div class="sub-text">${subText}</div>
+                    ${scoreHTML}
+                    ${highScoreHTML}
+                    ${quoteHTML}
+                    <div class="button-group">${buttonsHTML}</div>
+                `;
+
+                if (mode === 'pause') {
+                    const resumeBtn = document.getElementById('resumeBtn');
+                    const restartBtn = document.getElementById('restartFromPauseBtn');
+                    if (resumeBtn) resumeBtn.addEventListener('click', () => {
+                        isPaused = false;
+                        pauseBtn.textContent = '⏸️';
+                        overlay.classList.add('hidden');
+                    });
+                    if (restartBtn) restartBtn.addEventListener('click', () => {
+                        overlay.classList.add('hidden');
+                        startGame();
+                    });
+                } else if (mode === 'end') {
+                    const playAgainBtn = document.getElementById('playAgainBtn');
+                    if (playAgainBtn) playAgainBtn.addEventListener('click', () => {
+                        overlay.classList.add('hidden');
+                        startGame();
+                    });
+                } else {
+                    const startBtn = document.getElementById('startBtn');
+                    if (startBtn) startBtn.addEventListener('click', () => {
+                        overlay.classList.add('hidden');
+                        startGame();
+                    });
+                }
+            }
+
+            function handleTileClick(e) {
+                const tile = e.target.closest('.tile');
+                if (!tile) return;
+                if (!isPlaying || isPaused) return;
+
+                const clicked = tile.dataset.letter;
+
+                if (clicked === targetLetter) {
+                    score++;
+                    currentStreak++;
+                    tile.classList.add('correct-flash');
+                    setTimeout(() => tile.classList.remove('correct-flash'), 150);
+
+                    generateGrid();
+                    setNewTarget();
+                    updateUI();
+                } else {
+                    currentStreak = 0;
+                    currentBlur = Math.min(currentBlur + 3, MAX_BLUR);
+                    tile.classList.add('wrong-flash');
+                    setTimeout(() => tile.classList.remove('wrong-flash'), 150);
+                    updateUI();
+                }
+            }
+
+            function init() {
+                generateGrid();
+                setNewTarget();
+                updateUI();
+                timerDisplay.textContent = GAME_DURATION;
+                scoreDisplay.textContent = '0';
+                streakDisplay.textContent = '0';
+                grid.style.filter = 'blur(0px)';
+                grid.style.fontSize = '1.8rem';
+
+                pauseBtn.addEventListener('click', togglePause);
+                grid.addEventListener('click', handleTileClick);
+
+                renderOverlay('idle');
+                overlay.classList.remove('hidden');
+                console.log('👁️ Dr. Drescher Sprint loaded. High Score:', currentHighScore);
+            }
+
+            init();
+
+        })();
+    </script>
+</body>
+</html>
