@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Dr. Drescher's 20/20 Sprint</title>
+    <title>20/20 Sprint</title>
 
     <style>
         * {
@@ -45,30 +45,53 @@
 
         .header h1 {
             color: #ffffff;
-            font-size: clamp(1.3rem, 5vw, 1.8rem);
+            font-size: clamp(1.4rem, 5.5vw, 2rem);
             font-weight: 700;
             letter-spacing: -0.5px;
+            line-height: 1.2;
         }
         .header h1 span {
             color: #e0ab4c;
         }
 
+        .header .subtitle {
+            color: #e0ab4c;
+            font-weight: 600;
+            font-size: clamp(0.8rem, 2.5vw, 1.1rem);
+            margin-top: 2px;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
         .header .sub {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            margin-top: 4px;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin-top: 2px;
             color: rgba(255, 255, 255, 0.85);
-            font-size: clamp(0.65rem, 2vw, 0.85rem);
+            font-size: clamp(0.55rem, 1.8vw, 0.75rem);
             font-weight: 600;
         }
-        .header .sub .high-score {
+        .header .sub .high-score-badge {
             background: #58001b;
-            padding: 3px 14px;
+            padding: 3px 12px;
             border-radius: 30px;
             color: #e0ab4c;
             font-weight: 700;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header .sub .high-score-badge span {
+            color: #ffffff;
+            background: #8b2230;
+            padding: 0 8px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
         }
 
         .game-stats {
@@ -382,9 +405,11 @@
 
     <div id="app">
         <div class="header">
-            <h1>👁️ <span>20/20</span> Sprint for Dr. Drescher</h1>
+            <h1>👁️ <span>20/20</span> Sprint</h1>
+            <div class="subtitle">Play for Dr. Drescher!</div>
             <div class="sub">
-                <span class="high-score">🏅 Your Top Sprint Today: <span id="highScoreDisplay">0</span></span>
+                <span class="high-score-badge">🔥 Top Streak Today: <span id="hsStreak">0</span></span>
+                <span class="high-score-badge">📊 Top Score Today: <span id="hsScore">0</span></span>
             </div>
         </div>
 
@@ -425,19 +450,28 @@
             const LETTERS = ['E', 'F', 'P', 'T', 'O', 'Z', 'D', 'C'];
             const GRID_SIZE = 5;
             const GAME_DURATION = 30;
-            const STORAGE_KEY = 'drescherHighScoreTimed';
             const MAX_BLUR = 14;
+
+            // Storage keys
+            const SCORE_STORAGE_KEY = 'drescherHighScore';
+            const STREAK_STORAGE_KEY = 'drescherHighStreak';
 
             const grid = document.getElementById('grid');
             const targetEl = document.getElementById('targetLetter');
             const scoreDisplay = document.getElementById('scoreDisplay');
             const timerDisplay = document.getElementById('timerDisplay');
             const streakDisplay = document.getElementById('streakDisplay');
-            const highScoreDisplay = document.getElementById('highScoreDisplay');
+            const hsStreak = document.getElementById('hsStreak');
+            const hsScore = document.getElementById('hsScore');
             const overlay = document.getElementById('overlay');
             const overlayCard = document.getElementById('overlayCard');
             const pauseBtn = document.getElementById('pauseBtn');
 
+            // ---- Load saved stats ----
+            let currentHighScore = parseInt(localStorage.getItem(SCORE_STORAGE_KEY)) || 0;
+            let currentHighStreak = parseInt(localStorage.getItem(STREAK_STORAGE_KEY)) || 0;
+
+            // ---- State ----
             let score = 0;
             let timeLeft = GAME_DURATION;
             let currentStreak = 0;
@@ -446,10 +480,15 @@
             let isPlaying = false;
             let isPaused = false;
             let timerInterval = null;
-            let currentHighScore = parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
 
-            highScoreDisplay.innerText = currentHighScore;
+            // ---- Update header badges ----
+            function updateHeaderStats() {
+                hsStreak.innerText = currentHighStreak;
+                hsScore.innerText = currentHighScore;
+            }
+            updateHeaderStats();
 
+            // ---- Helpers ----
             function getRandomLetter() {
                 return LETTERS[Math.floor(Math.random() * LETTERS.length)];
             }
@@ -468,7 +507,6 @@
             }
 
             function updateGridSize() {
-                // UPDATED: Shrink factor changed from 0.965 to 0.94 for more noticeable shrinking!
                 const base = 1.8;
                 const shrink = Math.pow(0.94, score);
                 let size = base * shrink;
@@ -515,6 +553,7 @@
                 pauseBtn.textContent = '⏸️';
             }
 
+            // ---- Start / End ----
             function startGame() {
                 resetGameState();
                 isPlaying = true;
@@ -544,18 +583,26 @@
                 }
                 pauseBtn.textContent = '⏸️';
 
-                let isNewHigh = false;
+                // Check for new high SCORE
+                let isNewHighScore = false;
                 if (score > currentHighScore) {
                     currentHighScore = score;
-                    localStorage.setItem(STORAGE_KEY, String(currentHighScore));
-                    highScoreDisplay.innerText = currentHighScore;
-                    isNewHigh = true;
+                    localStorage.setItem(SCORE_STORAGE_KEY, String(currentHighScore));
+                    isNewHighScore = true;
                 }
 
-                renderOverlay('end', isNewHigh);
+                // Check for new high STREAK 
+                if (currentStreak > currentHighStreak) {
+                    currentHighStreak = currentStreak;
+                    localStorage.setItem(STREAK_STORAGE_KEY, String(currentHighStreak));
+                }
+
+                updateHeaderStats();
+                renderOverlay('end', isNewHighScore);
                 overlay.classList.remove('hidden');
             }
 
+            // ---- Pause ----
             function togglePause() {
                 if (!isPlaying) return;
                 isPaused = !isPaused;
@@ -568,6 +615,7 @@
                 }
             }
 
+            // ---- Render Overlay ----
             function renderOverlay(mode, isNewHigh = false) {
                 let icon, title, subText, showScore, showHighScore, showQuote, showDonate, buttonsHTML;
 
@@ -588,7 +636,7 @@
                     `;
                 } else if (mode === 'end') {
                     icon = isNewHigh ? '🏆' : '⏰';
-                    title = isNewHigh ? 'New Best Sprint!' : "Time's Up!";
+                    title = isNewHigh ? 'New Best Score!' : "Time's Up!";
                     subText = `You found ${score} correct letters in 30 seconds!`;
                     showScore = true;
                     showHighScore = true;
@@ -615,7 +663,7 @@
 
                 const scoreHTML = showScore ? `<div class="score-display">Score: ${score}</div>` : '';
                 const highScoreHTML = showHighScore ?
-                    `<div class="high-score-end">🏅 Your Top Sprint Today: <span>${currentHighScore}</span></div>` :
+                    `<div class="high-score-end">📊 Top Score Today: <span>${currentHighScore}</span> &nbsp;|&nbsp; 🔥 Top Streak Today: <span>${currentHighStreak}</span></div>` :
                     '';
                 const quoteHTML = showQuote ? `
                     <div class="quote-block">
@@ -661,6 +709,7 @@
                 }
             }
 
+            // ---- Click Handler ----
             function handleTileClick(e) {
                 const tile = e.target.closest('.tile');
                 if (!tile) return;
@@ -669,8 +718,17 @@
                 const clicked = tile.dataset.letter;
 
                 if (clicked === targetLetter) {
+                    // Correct
                     score++;
                     currentStreak++;
+
+                    // Check for new high streak (updates LIVE)
+                    if (currentStreak > currentHighStreak) {
+                        currentHighStreak = currentStreak;
+                        localStorage.setItem(STREAK_STORAGE_KEY, String(currentHighStreak));
+                        updateHeaderStats();
+                    }
+
                     tile.classList.add('correct-flash');
                     setTimeout(() => tile.classList.remove('correct-flash'), 150);
 
@@ -678,6 +736,7 @@
                     setNewTarget();
                     updateUI();
                 } else {
+                    // Wrong
                     currentStreak = 0;
                     currentBlur = Math.min(currentBlur + 3, MAX_BLUR);
                     tile.classList.add('wrong-flash');
@@ -686,6 +745,7 @@
                 }
             }
 
+            // ---- Init ----
             function init() {
                 generateGrid();
                 setNewTarget();
@@ -701,7 +761,7 @@
 
                 renderOverlay('idle');
                 overlay.classList.remove('hidden');
-                console.log('👁️ Dr. Drescher Sprint loaded. High Score:', currentHighScore);
+                console.log('👁️ 20/20 Sprint loaded. High Score:', currentHighScore, '| High Streak:', currentHighStreak);
             }
 
             init();
