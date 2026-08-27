@@ -523,7 +523,18 @@
             }
 
             function setNewTarget() {
-                targetLetter = getRandomLetter();
+                const tiles = document.querySelectorAll('.tile');
+                if (tiles.length === 0) {
+                    // Fallback in case there are no tiles (shouldn't happen)
+                    targetLetter = getRandomLetter();
+                } else {
+                    // Find all unique letters present on the board
+                    const uniqueLetters = new Set();
+                    tiles.forEach(tile => uniqueLetters.add(tile.dataset.letter));
+                    const availableLetters = Array.from(uniqueLetters);
+                    // Pick a random letter from the ones available on the board
+                    targetLetter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+                }
                 targetEl.textContent = targetLetter;
                 targetEl.classList.remove('pulse');
                 void targetEl.offsetWidth;
@@ -591,7 +602,7 @@
                     isNewHighScore = true;
                 }
 
-                // Check for new high STREAK 
+                // Check for new high STREAK
                 if (currentStreak > currentHighStreak) {
                     currentHighStreak = currentStreak;
                     localStorage.setItem(STREAK_STORAGE_KEY, String(currentHighStreak));
@@ -722,7 +733,7 @@
                     score++;
                     currentStreak++;
 
-                    // Check for new high streak (updates LIVE)
+                    // Check for new high streak (update LIVE)
                     if (currentStreak > currentHighStreak) {
                         currentHighStreak = currentStreak;
                         localStorage.setItem(STREAK_STORAGE_KEY, String(currentHighStreak));
