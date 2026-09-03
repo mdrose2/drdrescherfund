@@ -408,8 +408,8 @@
             <h1>👁️ <span>20/20</span> Sprint</h1>
             <div class="subtitle">Play for Dr. Drescher!</div>
             <div class="sub">
-                <span class="high-score-badge">🔥 Top Streak Today: <span id="hsStreak">0</span></span>
-                <span class="high-score-badge">📊 Top Score Today: <span id="hsScore">0</span></span>
+                <span class="high-score-badge">🔥 Your Top Streak Today: <span id="hsStreak">0</span></span>
+                <span class="high-score-badge">📊 Your Top Score Today: <span id="hsScore">0</span></span>
             </div>
         </div>
 
@@ -674,7 +674,7 @@
 
                 const scoreHTML = showScore ? `<div class="score-display">Score: ${score}</div>` : '';
                 const highScoreHTML = showHighScore ?
-                    `<div class="high-score-end">📊 Your Top Score Today: <span>${currentHighScore}</span> &nbsp;|&nbsp; 🔥 Your Top Streak Today: <span>${currentHighStreak}</span></div>` :
+                    `<div class="high-score-end">📊 Your Top Score: <span>${currentHighScore}</span> &nbsp;|&nbsp; 🔥 Your Top Streak: <span>${currentHighStreak}</span></div>` :
                     '';
                 const quoteHTML = showQuote ? `
                     <div class="quote-block">
